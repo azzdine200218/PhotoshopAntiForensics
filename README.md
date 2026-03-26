@@ -77,6 +77,25 @@ PhotoshopAntiForensics/
 
 ---
 
+## 💎 Premium Edition
+
+Looking for the **advanced version** with extended features, priority support, and custom configurations?
+
+Reach out for more details:
+
+| Channel | Contact |
+|---------|---------|
+| **Telegram** | [@Go_gf](https://t.me/Go_gf) |
+| **Email** | [azrazr351@gmail.com](mailto:azrazr351@gmail.com) |
+
+## 🛠️ Custom Development
+
+Need a **custom-built tool** tailored to your specific requirements? I develop advanced, production-grade software solutions on demand. Whether it's a specialized engine, a private toolkit, or a fully bespoke system — let's discuss what we can build together.
+
+> I'm always open to ambitious projects and innovative collaborations. Don't hesitate to reach out.
+
+---
+
 ## 🔒 Security & Ethics Disclaimer
 This tool was developed for **educational purposes, penetration testing, and forensic research**. The developer is not responsible for any misuse of this platform for malicious activities, fraud, or deception. 
 
