@@ -42,7 +42,7 @@ PhotoStrike is an advanced, production-grade digital forensic and anti-forensic 
 ### 1. Requirements
 Ensure you have **Python 3.8+** installed.
 ```bash
-git clone https://github.com/YOUR_USERNAME/PhotoshopAntiForensics.git
+git clone https://github.com/azzdine200218/PhotoshopAntiForensics.git
 cd PhotoshopAntiForensics
 pip install -r requirements.txt
 ```
