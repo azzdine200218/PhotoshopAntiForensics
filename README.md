@@ -17,6 +17,9 @@ PhotoStrike is an advanced, production-grade digital forensic and anti-forensic 
 * **PhotoStrike (Evade Mode):** Strips away incriminating digital artifacts (like Photoshop traces or EXIF metadata) and actively defeats state-of-the-art forensic analysis tools by injecting mathematically precise noise matrices, cloning physical sensor fingerprints (PRNU), and obfuscating JPEG block artifacts.
 * **PhotoScan (Analysis Mode):** A deep-dive forensic tool that visually exposes image manipulation, extracts raw proprietary payloads, and performs Error Level Analysis (ELA) to hunt for pasted objects or doctored pixels.
 
+## 📸 Interface Preview
+![PhotoStrike Command Center UI](assets/ui_preview.png)
+
 ---
 
 ## 🚀 Key Features
