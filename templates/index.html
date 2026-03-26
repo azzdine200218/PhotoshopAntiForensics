@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoStrike & PhotoScan | Anti-Forensics Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #050508;
+            --primary: #00ffaa;
+            --primary-glow: rgba(0, 255, 170, 0.4);
+            --danger: #ff2a5f;
+            --danger-glow: rgba(255, 42, 95, 0.4);
+            --surface: rgba(18, 18, 24, 0.65);
+            --surface-hover: rgba(25, 25, 33, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f0f5;
+            --text-muted: #888899;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            display: flex; justify-content: center; align-items: flex-start; 
+            min-height: 100vh; padding: 40px 20px;
+            background-image: 
+                radial-gradient(circle at 15% 10%, rgba(255, 42, 95, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 90%, rgba(0, 255, 170, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, #08080c 0%, #020203 100%);
+            background-attachment: fixed;
+        }
+
+        /* Glassmorphism Container */
+        .container { 
+            width: 100%; max-width: 960px; 
+            background: var(--surface); 
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 20px; 
+            border: 1px solid var(--border-glass); 
+            padding: 40px; 
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1); 
+            display: flex; flex-direction: column; gap: 24px;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header { text-align: center; margin-bottom: 10px; }
+        .header h1 { 
+            font-weight: 800; font-size: 2.8rem; 
+            letter-spacing: -1px; margin-bottom: 8px; 
+            text-transform: uppercase;
+        }
+        .header h1 .strike-txt { color: var(--danger); text-shadow: 0 0 15px var(--danger-glow); }
+        .header h1 .scan-txt { color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); }
+        .header p { color: var(--text-muted); font-size: 1.05rem; letter-spacing: 0.5px; font-weight: 300;}
+
+        /* Modern Tabs */
+        .tabs { 
+            display: flex; gap: 12px; margin-bottom: 10px; 
+            background: rgba(0,0,0,0.3); padding: 6px; 
+            border-radius: 12px; border: 1px solid var(--border-glass);
+        }
+        .tab-btn { 
+            flex: 1; padding: 14px; background: transparent; 
+            border: none; color: var(--text-muted); font-weight: 600; 
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-size: 1.1rem; border-radius: 8px; 
+            font-family: inherit; letter-spacing: 0.5px;
+        }
+        .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.03); }
+        .tab-btn.active.strike { 
+            color: #fff; background: rgba(255, 42, 95, 0.15); 
+            box-shadow: inset 0 0 0 1px var(--danger), 0 0 20px var(--danger-glow);
+        }
+        .tab-btn.active.scan { 
+            color: #fff; background: rgba(0, 255, 170, 0.15); 
+            box-shadow: inset 0 0 0 1px var(--primary), 0 0 20px var(--primary-glow);
+        }
+        
+        .tab-content { display: none; margin-top: 10px;}
+        .tab-content.active { display: block; animation: fadeTab 0.4s ease-out forwards;}
+        @keyframes fadeTab { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        /* Custom Radio Buttons */
+        .options-group { 
+            display: flex; gap: 15px; margin-bottom: 24px; 
+            background: rgba(0,0,0,0.2); padding: 10px; 
+            border-radius: 12px; border: 1px solid var(--border-glass); 
+        }
+        .radio-container { 
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 0.95rem; font-weight: 600; padding: 14px; 
+            border-radius: 8px; transition: all 0.2s; 
+            border: 1px solid transparent; color: var(--text-muted);
+        }
+        .radio-container:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .radio-container input { display: none; }
+        .radio-container input:checked + span { color: var(--danger); text-shadow: 0 0 10px var(--danger-glow); }
+        .radio-container:has(input:checked) { 
+            background: rgba(255, 42, 95, 0.08); 
+            border-color: rgba(255, 42, 95, 0.3);
+        }
+
+        /* Interactive Dropzones */
+        .dropzone { 
+            position: relative; overflow: hidden;
+            border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px; 
+            padding: 40px 20px; text-align: center; cursor: pointer; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            background: rgba(10, 10, 15, 0.4); margin-bottom: 24px; 
+        }
+        .dropzone::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+            transform: translateX(-100%); transition: 0.5s;
+        }
+        .dropzone:hover::before { transform: translateX(100%); }
+        .dropzone:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .dropzone.strike-zone:hover { border-color: var(--danger); background: rgba(255, 42, 95, 0.04); }
+        .dropzone.scan-zone:hover { border-color: var(--primary); background: rgba(0, 255, 170, 0.04); }
+        .donor-zone { display: none; }
+        .donor-zone.active { display: block; animation: fadeTab 0.4s ease-out forwards; }
+        
+        .dropzone p { color: var(--text-muted); font-size: 1rem; margin-top: 15px; font-weight: 400;}
+        .dropzone strong { color: #fff; font-weight: 600; font-size: 1.1rem;}
+        .dropzone .icon { font-size: 2.5rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)); transition: all 0.3s ease; }
+        .dropzone:hover .icon { transform: scale(1.1); }
+        .file-input { display: none; }
+        .file-status { 
+            font-weight: 600; color: #fff; margin-top: 15px; 
+            font-size: 0.95rem; word-break: break-all; 
+            background: rgba(0,0,0,0.3); padding: 8px 16px; 
+            border-radius: 20px; display: inline-block; opacity: 0; transition: 0.3s;
+        }
+        .file-status.visible { opacity: 1; }
+
+        /* Premium Buttons */
+        .btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 12px; 
+            font-size: 1.1rem; font-weight: 700; cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            text-transform: uppercase; letter-spacing: 1.5px; 
+            display: flex; justify-content: center; align-items: center; gap: 12px; 
+            font-family: inherit; position: relative; overflow: hidden;
+        }
+        .btn::after {
+            content: ''; position: absolute; top:0;left:0;width:100%;height:100%;
+            background: linear-gradient(rgba(255,255,255,0.2), transparent);
+            opacity: 0; transition: 0.3s;
+        }
+        .btn:hover::after { opacity: 1; }
+        .btn:active { transform: scale(0.98); }
+
+        .btn-strike { 
+            background: linear-gradient(135deg, #e60039, var(--danger)); 
+            color: #fff; box-shadow: 0 10px 20px rgba(255, 42, 95, 0.3); 
+        }
+        .btn-strike:hover { box-shadow: 0 15px 30px rgba(255, 42, 95, 0.5); }
+        .btn-strike.mode-clone { display: none; background: linear-gradient(135deg, #cc00ff, #fe3366); box-shadow: 0 10px 20px rgba(204, 0, 255, 0.3);}
+        .btn-strike.mode-clone:hover { box-shadow: 0 15px 30px rgba(204, 0, 255, 0.5);}
+        
+        .btn-scan { 
+            background: linear-gradient(135deg, #00cc88, var(--primary)); 
+            color: #050508; box-shadow: 0 10px 20px rgba(0, 255, 170, 0.2); 
+        }
+        .btn-scan:hover { box-shadow: 0 15px 30px rgba(0, 255, 170, 0.4); }
+
+        /* Hacker Terminal */
+        .terminal { 
+            background: rgba(5, 5, 8, 0.8); border: 1px solid rgba(255,255,255,0.05); 
+            border-radius: 12px; padding: 20px; height: 180px; overflow-y: auto; 
+            font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #aaa; 
+            line-height: 1.6; box-shadow: inset 0 5px 20px rgba(0,0,0,0.5); 
+            margin-bottom: 5px; scroll-behavior: smooth;
+        }
+        .terminal::-webkit-scrollbar { width: 8px; }
+        .terminal::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .terminal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .terminal::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        
+        .terminal p { margin-bottom: 6px; }
+        .terminal .log-error { color: var(--danger); text-shadow: 0 0 5px rgba(255,42,95,0.3); }
+        .terminal .log-success { color: var(--primary); text-shadow: 0 0 5px rgba(0,255,170,0.3); font-weight: 500;}
+        .terminal .log-info { color: #d0d0d5; }
+        .terminal .log-sys { color: #55aaff; }
+
+        .spinner { 
+            display: none; width: 22px; height: 22px; 
+            border: 3px solid rgba(255,255,255,0.2); 
+            border-top-color: #fff; border-radius: 50%; 
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+        }
+        .btn-scan .spinner { border: 3px solid rgba(0,0,0,0.1); border-top-color: #000; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* Analysis Results Panel */
+        .analysis-results { 
+            display: none; background: rgba(0,0,0,0.3); 
+            border: 1px solid var(--border-glass); border-radius: 16px; 
+            padding: 30px; margin-top: 10px; animation: fadeTab 0.5s ease;
+        }
+        .analysis-results h3 { 
+            color: var(--primary); margin-bottom: 20px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;
+            font-weight: 600; font-size: 1.4rem; letter-spacing: 0.5px;
+        }
+        .results-grid { display: flex; gap: 30px; flex-wrap: wrap; }
+        .results-col { flex: 1; min-width: 320px; }
+        .results-col h4 { color: #fff; margin-bottom: 8px; font-weight: 500; font-size: 1.1rem;}
+        
+        .ela-img { 
+            width: 100%; border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            transition: transform 0.3s;
+        }
+        .ela-img:hover { transform: scale(1.02); }
+        
+        .meta-tree { 
+            font-family: 'Fira Code', monospace; font-size: 0.85rem; 
+            color: #00ffaa; background: #050508; padding: 20px; 
+            border-radius: 12px; height: 350px; overflow-y: auto; 
+            white-space: pre-wrap; word-break: break-all;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .warning-box { 
+            background: rgba(255, 42, 95, 0.1); 
+            border-left: 4px solid var(--danger); 
+            padding: 14px 18px; margin-bottom: 20px; 
+            font-size: 0.95rem; font-weight: 500; border-radius: 0 8px 8px 0;
+            color: #ffe6eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Photo<span class="strike-txt">Strike</span> <span style="color:#22222d; font-weight:300;">|</span> Photo<span class="scan-txt">Scan</span></h1>
+        <p>Advanced Anti-Forensics & Tactical Analysis Suite</p>
+    </div>
+
+    <!-- TERMINAL (Global) -->
+    <div class="terminal" id="terminal">
+        <p class="log-sys">> SYSTEM INIT... Phantom Mode Engaged.</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn strike active" onclick="switchTab('strike')">Evade (PhotoStrike)</button>
+        <button class="tab-btn scan" onclick="switchTab('scan')">Analyze (PhotoScan)</button>
+    </div>
+
+    <!-- TAB 1: STRIKE (EVADE) -->
+    <div id="tab-strike" class="tab-content active">
+        <form id="strikeForm">
+            <div class="options-group">
+                <label class="radio-container">
+                    <input type="radio" name="mode" value="deep_wash" checked onchange="toggleMode()">
+                    <span>Deep Wash Pipeline</span>
+                </label>
+                <label class="radio-container">
+                    <input type="radio" name="mode" value="clone_identity" onchange="toggleMode()">
+                    <span>Identity Cloning (PRNU & EXIF)</span>
+                </label>
+            </div>
+            
+            <div class="dropzone strike-zone" onclick="document.getElementById('targetFile').click()">
+                <div class="icon">🎯</div>
+                <p><strong>Click or Drag Target Image to EVADE</strong><br>Supports JPG, PNG, PSD</p>
+                <div id="targetStatus" class="file-status"></div>
+                <input type="file" id="targetFile" class="file-input" accept=".jpg,.jpeg,.png,.psd" onchange="updateFile(this, 'targetStatus')">
+            </div>
+            
+            <div class="dropzone strike-zone donor-zone" id="donorDropzone" onclick="document.getElementById('donorFile').click()">
+                <div class="icon">🧬</div>
+                <p><strong>Click or Drag AUTHENTIC Donor Image</strong><br>Extracts PRNU Sensor Profile, Q-Tables & EXIF</p>
+                <div id="donorStatus" class="file-status"></div>
+                <input type="file" id="donorFile" class="file-input" accept=".jpg,.jpeg" onchange="updateFile(this, 'donorStatus')">
+            </div>
+            
+            <button type="button" class="btn btn-strike mode-wash" id="btnWash" onclick="submitStrike('deep_wash')">
+                <span class="spinner" id="spinWash"></span> Execute Deep Wash
+            </button>
+            <button type="button" class="btn btn-strike mode-clone" id="btnClone" onclick="submitStrike('clone_identity')">
+                <span class="spinner" id="spinClone"></span> Execute Identity Forgery
+            </button>
+        </form>
+    </div>
+
+    <!-- TAB 2: SCAN (ANALYZE) -->
+    <div id="tab-scan" class="tab-content">
+        <form id="scanForm">
+            <div class="dropzone scan-zone" onclick="document.getElementById('scanFile').click()">
+                <div class="icon">🔬</div>
+                <p><strong>Click or Drag Image to ANALYZE</strong><br>Extracts Metadata and Generates ELA Map</p>
+                <div id="scanStatus" class="file-status"></div>
+                <input type="file" id="scanFile" class="file-input" accept=".jpg,.jpeg,.png" onchange="updateFile(this, 'scanStatus')">
+            </div>
+            
+            <button type="button" class="btn btn-scan" id="btnScan" onclick="submitScan()">
+                <span class="spinner" id="spinScan"></span> Run Forensic Scan
+            </button>
+        </form>
+
+        <div class="analysis-results" id="analysisResults">
+            <h3>Forensic Intelligence Report</h3>
+            <div id="warningsContainer"></div>
+            <div class="results-grid">
+                <div class="results-col">
+                    <h4>Error Level Analysis (ELA)</h4>
+                    <p style="font-size: 0.85rem; color:#aaa; margin-bottom:15px; line-height:1.4;">Bright anomalous zones indicate varying quantization levels, highly indicative of splicing or clone stamping.</p>
+                    <img id="elaImage" class="ela-img" src="" alt="ELA Heatmap">
+                    <a id="elaDownload" href="#" download class="btn btn-scan" style="padding: 12px; font-size: 0.95rem;">Download Heatmap</a>
+                </div>
+                <div class="results-col">
+                    <h4>Extracted Metadata Payloads</h4>
+                    <div id="metaTree" class="meta-tree"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab Switching
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        document.querySelector(`.tab-btn.${tabId}`).classList.add('active');
+        logToTerminal(`System mode switched: ${tabId.toUpperCase()} PROTOCOL`, 'log-sys');
+    }
+
+    function toggleMode() {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const donorZone = document.getElementById('donorDropzone');
+        const btnWash = document.getElementById('btnWash');
+        const btnClone = document.getElementById('btnClone');
+
+        if (mode === 'clone_identity') {
+            donorZone.classList.add('active');
+            btnWash.style.display = 'none';
+            btnClone.style.display = 'flex';
+            logToTerminal("Identity Cloning Selected. Donor image required for PRNU extraction.", "log-info");
+        } else {
+            donorZone.classList.remove('active');
+            btnWash.style.display = 'flex';
+            btnClone.style.display = 'none';
+        }
+    }
+
+    function updateFile(input, statusId) {
+        const statusEl = document.getElementById(statusId);
+        if(input.files[0]) {
+            statusEl.textContent = "✔ Loaded: " + input.files[0].name;
+            statusEl.classList.add('visible');
+            logToTerminal(`Asset staged: ${input.files[0].name} (${(input.files[0].size/1024).toFixed(1)} KB)`, 'log-info');
+        }
+    }
+
+    // SSE Terminal Logs
+    const terminal = document.getElementById('terminal');
+    function logToTerminal(message, cssClass="log-sys") {
+        const p = document.createElement('p');
+        p.className = cssClass;
+        
+        // Add timestamp to logs
+        const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+        p.innerHTML = `<span style="color:#555">[${time}]</span> > ${message}`;
+        
+        terminal.appendChild(p);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    const eventSource = new EventSource("/stream_logs");
+    eventSource.onmessage = function(e) {
+        let msg = e.data;
+        let cssClass = "log-info";
+        if (msg.includes("[+]")) cssClass = "log-success";
+        else if (msg.includes("[-]")) cssClass = "log-error";
+        else if (msg.includes("[*]")) cssClass = "log-sys";
+        logToTerminal(msg.replace(/\[\+\]|\[-\]|\[\*\]/g, '').trim(), cssClass);
+    };
+
+    // Submit Evade
+    async function submitStrike(mode) {
+        const targetFile = document.getElementById('targetFile').files[0];
+        if (!targetFile) return alert("Warning: Target Image missing.");
+
+        const formData = new FormData();
+        formData.append('target_file', targetFile);
+        formData.append('mode', mode);
+
+        if (mode === 'clone_identity') {
+            const donorFile = document.getElementById('donorFile').files[0];
+            if (!donorFile) return alert("Critical: Identity Forgery requires an Authentic Donor Image.");
+            formData.append('donor_file', donorFile);
+        }
+
+        const btn = mode === 'deep_wash' ? document.getElementById('btnWash') : document.getElementById('btnClone');
+        const spinner = mode === 'deep_wash' ? document.getElementById('spinWash') : document.getElementById('spinClone');
+        
+        btn.disabled = true; spinner.style.display = 'block';
+        logToTerminal("INITIATING ANTI-FORENSICS PIPELINE...", "log-sys");
+
+        try {
+            const res = await fetch('/process', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (res.ok) {
+                logToTerminal(`OPERATION SUCCESSFUL. Target neutralized. Downloading payload...`, 'log-success');
+                setTimeout(() => window.location.href = data.download_url, 1000);
+            } else logToTerminal(`FAILED: ${data.error}`, 'log-error');
+        } catch (error) { logToTerminal(`CRITICAL ERROR: ${error.message}`, 'log-error'); } 
+        finally { btn.disabled = false; spinner.style.display = 'none'; }
+    }
+
+    // Submit Scan
+    async function submitScan() {
+        const scanFile = document.getElementById('scanFile').files[0];
+        if (!scanFile) return alert("Warning: Image required for analysis.");
+
+        const formData = new FormData();
+        formData.append('target_file', scanFile);
+
+        const btn = document.getElementById('btnScan');
+        const spinner = document.getElementById('spinScan');
+        
+        btn.disabled = true; spinner.style.display = 'block';
+        document.getElementById('analysisResults').style.display = 'none';
+        logToTerminal("INITIATING TACTICAL FORENSIC SCAN...", "log-sys");
+
+        try {
+            const res = await fetch('/analyze', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (res.ok) {
+                logToTerminal(`SCAN COMPLETE. Intelligence report generated.`, 'log-success');
+                renderAnalysis(data);
+            } else {
+                logToTerminal(`ANALYSIS FAILED: ${data.error}`, 'log-error');
+            }
+        } catch (error) { logToTerminal(`CRITICAL ERROR: ${error.message}`, 'log-error'); } 
+        finally { btn.disabled = false; spinner.style.display = 'none'; }
+    }
+
+    function renderAnalysis(data) {
+        const pane = document.getElementById('analysisResults');
+        const elaImg = document.getElementById('elaImage');
+        const elaDl = document.getElementById('elaDownload');
+        const metaTree = document.getElementById('metaTree');
+        const warnBox = document.getElementById('warningsContainer');
+
+        pane.style.display = 'block';
+        
+        // ELA setup
+        if (data.ela_url) {
+            elaImg.src = data.ela_url + "?t=" + new Date().getTime(); // cache bust
+            elaDl.href = data.ela_url;
+        }
+
+        // Warnings
+        warnBox.innerHTML = '';
+        if (data.metadata.warnings && data.metadata.warnings.length > 0) {
+            data.metadata.warnings.forEach(w => {
+                warnBox.innerHTML += `<div class="warning-box">⚠ ${w}</div>`;
+            });
+        }
+
+        // Tree structure
+        metaTree.textContent = JSON.stringify(data.metadata, null, 2);
+    }
+</script>
+
+</body>
+</html>

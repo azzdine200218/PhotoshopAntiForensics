@@ -1,0 +1,6 @@
+Pillow
+piexif
+psd-tools
+numpy
+scipy
+flask
